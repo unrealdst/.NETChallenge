@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+using BucketService;
+using BucketService.Models;
 using Microsoft.AspNetCore.Mvc;
 using NETChallenge.Models;
 
@@ -8,29 +10,44 @@ namespace NETChallenge.Controllers
     [Route("api/[controller]")]
     public class BucketController : Controller
     {
-        private Bucket Bucket = new Bucket();
+        private readonly IBucketService bucketService;
+
+        public BucketController()
+        {
+            var bucketRepository = new BucketRepository.BucketRepository();
+            bucketService = new BucketService.BucketService(bucketRepository);
+        }
 
         [HttpGet]
-        public Bucket Get()
+        public BucketViewModel Get()
         {
-            return Bucket;
+            BucketDomainModel bucket = bucketService.Get();
+            return new BucketViewModel()
+            {
+                Items = bucket.Items.Select(x => new ItemViewModel() { Id = x.Id, Name = x.Name, PriceForUnit = x.PriceForUnit, Quantity = x.Quantity }).ToList()
+            };
         }
 
         [HttpPost]
-        public void Post([FromBody]Item item)
+        public void Post([FromBody]ItemViewModel item)
         {
-            Bucket.Items.Add(item);
+            if (ModelState.IsValid)
+            {
+                var domainModelItem = new ItemDomainModel()
+                {
+                    Name = item.Name,
+                    PriceForUnit = item.PriceForUnit,
+                    Quantity = item.Quantity
+                };
+
+                bucketService.Add(domainModelItem);
+            }
         }
 
         [HttpPut("{Id}")]
-        public void Quantity(int id, int Quantity)
+        public void Quantity(int id, int quantity)
         {
-            if(Quantity == 0)
-            {
-                Bucket.Items.Remove(Bucket.Items.Single(x => x.Id == id));
-                return;
-            }
-            Bucket.Items.Single(x => x.Id == id).Quantity = Quantity;
+            bucketService.Quantity(id, quantity);
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace NETChallenge.Models
+namespace BucketService.Models
 {
-    public class Item
+    public class ItemDomainModel
     {
         public int Id { get; set; }
         public int Quantity { get; set; }
